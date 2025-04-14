@@ -22,5 +22,5 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'false'
         uses: todogroup/repolinter-action@v1
         with:
-          config_url: "https://raw.githubusercontent.com/quic/.github/main/repolint.json"
+          config_url: "https://raw.githubusercontent.com/qualcomm/.github/main/repolint.json"
 

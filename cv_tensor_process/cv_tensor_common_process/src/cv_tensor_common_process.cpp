@@ -100,7 +100,7 @@ CvTensorCommonProcessNode::CvTensorCommonProcessNode(const rclcpp::NodeOptions &
 void CvTensorCommonProcessNode::msg_callback(
     const std::shared_ptr<qrb_ros::transport::type::Image> msg)
 {
-  RCLCPP_DEBUG_STREAM(this->get_logger(), ">>> Got image with encoding: " << msg->encoding);
+  RCLCPP_DEBUG_STREAM(this->get_logger(), ">>> CV common tensor begin: " << msg->encoding);
 
   try {
     process_core(msg);
@@ -114,7 +114,7 @@ void CvTensorCommonProcessNode::msg_callback(
     RCLCPP_ERROR_STREAM(this->get_logger(), "Error:unexpected exception");
   }
 
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "<<< Process tensor done.");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), ">>> CV common tensor done.");
 }
 
 void CvTensorCommonProcessNode::process_core(
@@ -124,9 +124,10 @@ void CvTensorCommonProcessNode::process_core(
   // read out image data from dmabuf
   auto size =
       qrb_ros::transport::image_utils::get_image_align_size(msg->width, msg->height, msg->encoding);
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "alloc buffer for image.");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "alloc buffer for image, size: " << size);
   auto img_data = std::make_unique<char[]>(size);
 
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "read_image_from_dmabuf");
   qrb_ros::transport::image_utils::read_image_from_dmabuf(msg->dmabuf, img_data.get(), msg->width,
       msg->height, qrb_ros::transport::image_utils::get_image_stride(msg->width, msg->encoding),
       msg->encoding, true);

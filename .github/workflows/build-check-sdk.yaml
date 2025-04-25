@@ -73,7 +73,7 @@ jobs:
           export PYTHONPATH=${PYTHONPATH}:${OECORE_NATIVE_SYSROOT}/usr/lib/python3.12/site-packages/:${OECORE_TARGET_SYSROOT}/usr/lib/python3.12/site-packages/
 
           ## specify packages to to built
-          PKG_LIST="qrb_ros_yolo_processor qrb_ros_cv_tensor_common_process"
+          PKG_LIST="qrb_ros_yolo_process qrb_ros_cv_tensor_common_process"
           for pkg in ${PKG_LIST}
           do
             colcon build --merge-install --packages-up-to "${pkg}" --cmake-args \

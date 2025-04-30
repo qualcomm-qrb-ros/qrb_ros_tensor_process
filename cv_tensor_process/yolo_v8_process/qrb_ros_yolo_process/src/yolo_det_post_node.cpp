@@ -100,7 +100,18 @@ void YoloDetPostProcessNode::msg_callback(const custom_msg::TensorList::SharedPt
 
   // call hal-lib to process tensor
   std::vector<qrb::yolo_process::YoloInstance> instances;
-  processor_->process(tensors, instances);
+  try {
+    processor_->process(tensors, instances);
+  } catch (const std::invalid_argument & e) {
+    RCLCPP_ERROR(this->get_logger(), "Error: %s", e.what());
+    return;
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(this->get_logger(), "Error: %s", e.what());
+    return;
+  } catch (...) {
+    RCLCPP_ERROR(this->get_logger(), "Error: unexpected exception");
+    return;
+  }
 
   // construct ros msg and publish
   vision_msgs::msg::Detection2DArray det_2d_arr;

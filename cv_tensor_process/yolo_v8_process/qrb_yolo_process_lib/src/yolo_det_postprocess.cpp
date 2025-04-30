@@ -132,12 +132,15 @@ void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
       label = "unknown";
     }
 
-    // model returns TLBR bbox, convert to TLWH
-    BBoxCoords tlbr_coord = { ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] };
-    BBoxCoords tlwh_box = BoundingBox(tlbr_coord, BoundingBox::BoxFmt::TLBR).to_tlwh_coords();
-    vec_bbox.push_back(cv::Rect(tlwh_box[0], tlwh_box[1], tlwh_box[2], tlwh_box[3]));
-    vec_class.push_back(label);
-    vec_score.push_back(score);
+    try {  // model returns TLBR bbox, convert to TLWH
+      BBoxCoords tlbr_coord = { ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] };
+      BBoxCoords tlwh_box = BoundingBox(tlbr_coord, BoundingBox::BoxFmt::TLBR).to_tlwh_coords();
+      vec_bbox.push_back(cv::Rect(tlwh_box[0], tlwh_box[1], tlwh_box[2], tlwh_box[3]));
+      vec_class.push_back(label);
+      vec_score.push_back(score);
+    } catch (std::invalid_argument & e) {
+      continue;
+    }
   }
 
   std::vector<int> indices;

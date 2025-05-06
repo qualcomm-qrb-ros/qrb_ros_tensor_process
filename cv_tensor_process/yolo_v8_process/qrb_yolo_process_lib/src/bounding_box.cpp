@@ -12,7 +12,10 @@ namespace qrb::yolo_process
 BoundingBox::BoundingBox(const BBoxCoords & box, BoxFmt fmt)
 {
   if (box.size() != 4) {
-    throw std::invalid_argument("Invalid bounding box, expected 4 elements but got ");
+    std::ostringstream oss;
+    oss << "Invalid bounding box, expected 4 elements but got " << box.size() << " elements."
+        << std::endl;
+    throw std::invalid_argument(oss.str());
   }
 
   if (box[0] < 0 || box[1] < 0 || box[2] < 0 || box[3] < 0) {

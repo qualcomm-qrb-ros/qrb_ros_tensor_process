@@ -65,8 +65,8 @@ void YoloDetOverlayNode::msg_callback(sensor_msgs::msg::Image::ConstSharedPtr im
 {
   RCLCPP_DEBUG(this->get_logger(), ">>> YOLO DET overlay begin");
   if (img_msg->width != resize_width_ || img_msg->height != resize_height_) {
-    RCLCPP_ERROR(
-        this->get_logger(), "Image size mismatch: %d x %d", img_msg->width, img_msg->height);
+    RCLCPP_ERROR(this->get_logger(), "Image size mismatch: expect %dx%d but got %dx%d",
+        resize_width_, resize_height_, img_msg->width, img_msg->height);
     return;
   }
 

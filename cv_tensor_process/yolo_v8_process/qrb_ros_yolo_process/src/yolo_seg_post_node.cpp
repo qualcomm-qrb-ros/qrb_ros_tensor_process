@@ -30,6 +30,7 @@ YoloSegPostProcessNode::YoloSegPostProcessNode(const rclcpp::NodeOptions & optio
 
   if (label_file.empty()) {
     RCLCPP_ERROR(this->get_logger(), "label file not specified.");
+    throw std::invalid_argument("label_file not specified.");
   }
 
   // topic publisher & subscriber

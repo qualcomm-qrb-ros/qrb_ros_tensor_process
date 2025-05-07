@@ -28,6 +28,7 @@ YoloDetPostProcessNode::YoloDetPostProcessNode(const rclcpp::NodeOptions & optio
   RCLCPP_INFO(this->get_logger(), "score_thres: %f", score_thres);
 
   if (label_file.empty()) {
+    RCLCPP_ERROR(this->get_logger(), "label file not specified.");
     throw std::invalid_argument("label_file not specified.");
   }
 

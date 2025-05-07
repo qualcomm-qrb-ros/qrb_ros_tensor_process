@@ -10,11 +10,21 @@ namespace qrb_ros::yolo_process
 YoloSegOverlayNode::YoloSegOverlayNode(const rclcpp::NodeOptions & options)
   : Node("yolo_seg_overlay_node", options)
 {
-  this->declare_parameter("resize_width", 0);
-  this->declare_parameter("resize_height", 0);
+  this->declare_parameter<std::string>("target_res", "0x0");
+  std::string target_res = this->get_parameter("target_res").as_string();
 
-  this->get_parameter("resize_width", resize_width_);
-  this->get_parameter("resize_height", resize_height_);
+  // params check
+  std::transform(target_res.begin(), target_res.end(), target_res.begin(), ::tolower);
+  size_t split_pos = target_res.find('x');
+  if (split_pos == std::string::npos) {
+    std::ostringstream oss;
+    oss << this->get_name() << ": Invalid target_res format: " << target_res << ", ";
+    oss << "support format: <width>x<height>" << std::endl;
+    RCLCPP_ERROR_STREAM(this->get_logger(), oss.str());
+    throw std::invalid_argument(oss.str());
+  }
+  resize_width_ = std::stoi(target_res.substr(0, split_pos));
+  resize_height_ = std::stoi(target_res.substr(split_pos + 1));
 
   if (resize_width_ <= 0 || resize_height_ <= 0) {
     throw std::invalid_argument(

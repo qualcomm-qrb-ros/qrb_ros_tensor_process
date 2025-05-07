@@ -57,7 +57,7 @@ void YoloDetPostProcessNode::populate_tensor_from_msg(const custom_msg::TensorLi
     tensor.p_vec = &msg->tensor_list[i].data;
     tensor.dtype = qrb::yolo_process::TensorDataType::FLOAT32;
 
-    tensors.push_back(tensor);
+    tensors.push_back(std::move(tensor));
   }
 }
 
@@ -79,8 +79,8 @@ void YoloDetPostProcessNode::populate_pub_msg(vision_msgs::msg::Detection2DArray
     hypo.hypothesis.score = it.score;
     hypo.hypothesis.class_id = it.label;
 
-    detect.results.push_back(hypo);
-    det_2d_arr.detections.push_back(detect);
+    detect.results.push_back(std::move(hypo));
+    det_2d_arr.detections.push_back(std::move(detect));
   }
 }
 

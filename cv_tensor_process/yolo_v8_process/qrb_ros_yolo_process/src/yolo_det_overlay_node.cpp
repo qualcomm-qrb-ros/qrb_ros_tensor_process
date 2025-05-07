@@ -105,7 +105,7 @@ void YoloDetOverlayNode::msg_callback(sensor_msgs::msg::Image::ConstSharedPtr im
 
     std::string label = it.results[0].hypothesis.class_id;
     YoloInstance instance(x, y, w, h, BoundingBox::BoxFmt::CXYWH, score, label);
-    instances.push_back(instance);
+    instances.push_back(std::move(instance));
   }
   draw_inplace(instances, cv_ptr->image);
 

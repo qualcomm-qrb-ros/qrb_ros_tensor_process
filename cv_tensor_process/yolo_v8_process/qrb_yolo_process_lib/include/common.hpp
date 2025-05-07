@@ -75,6 +75,19 @@ struct YoloInstance
     : bbox({ x, y, w, h }, box_fmt), score(score), label(label), mask(mask)
   {
   }
+
+  // instance for yolo image segmentation (right value reference)
+  YoloInstance(float x,
+      float y,
+      float w,
+      float h,
+      BoundingBox::BoxFmt box_fmt,
+      float score,
+      const std::string & label,
+      std::vector<uint8_t> && mask)
+    : bbox({ x, y, w, h }, box_fmt), score(score), label(label), mask(mask)
+  {
+  }
 };
 
 /**

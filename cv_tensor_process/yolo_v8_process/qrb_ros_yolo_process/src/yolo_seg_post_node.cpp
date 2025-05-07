@@ -59,7 +59,7 @@ void YoloSegPostProcessNode::populate_tensor_from_msg(const custom_msg::TensorLi
     tensor.p_vec = &msg->tensor_list[i].data;
     tensor.dtype = qrb::yolo_process::TensorDataType::FLOAT32;
 
-    tensors.push_back(tensor);
+    tensors.push_back(std::move(tensor));
   }
 }
 
@@ -86,7 +86,7 @@ void YoloSegPostProcessNode::populate_pub_msg(
     vision_msgs::msg::ObjectHypothesisWithPose hypo;
     hypo.hypothesis.score = instance.score;
     hypo.hypothesis.class_id = instance.label;
-    yolo_instance.detection.results.push_back(hypo);
+    yolo_instance.detection.results.push_back(std::move(hypo));
 
     // populate sensor_msgs manually for sake of performance
     yolo_instance.instance_mask.header = msg.header;

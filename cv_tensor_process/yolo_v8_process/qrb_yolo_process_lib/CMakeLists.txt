@@ -23,7 +23,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 # add targets
 add_library(${PROJECT_NAME} SHARED
-  src/yolo_preprocess.cpp
   src/yolo_det_postprocess.cpp
   src/yolo_seg_postprocess.cpp
   src/bounding_box.cpp

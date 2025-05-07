@@ -19,17 +19,10 @@ ament_auto_find_build_dependencies()
 include_directories(include)
 
 ament_auto_add_library(qrb_ros_yolo_process_component SHARED
-  src/yolo_pre_node.cpp
   src/yolo_det_post_node.cpp
   src/yolo_det_overlay_node.cpp
   src/yolo_seg_post_node.cpp
   src/yolo_seg_overlay_node.cpp
-)
-# target_link_libraries(qrb_ros_yolo_process_component qrb_yolo_process)
-
-rclcpp_components_register_nodes(
-  qrb_ros_yolo_process_component
-  PLUGIN "qrb_ros::yolo_process::YoloPreProcessNode"
 )
 
 rclcpp_components_register_nodes(

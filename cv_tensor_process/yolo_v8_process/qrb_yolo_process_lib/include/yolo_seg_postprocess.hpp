@@ -37,20 +37,6 @@ public:
 
 private:
   /**
-   * \brief Validate input params for class method "process"
-   * \details TFLite model output 3 tensors shown below, N means the detected object count in one
-   * inference cycle, and is a fixed value up to model
-   *   - tensors[0] --> bbox tensor with shape float32[1,N,4], store the coordinate info of bounding
-   *     box for N objects
-   *   - tensors[1] --> score tensor with shape float32[1,N], store confidence of N objeces
-   *   - tensors[2] --> mask tensor with shape float32[1,32,N]
-   *   - tensors[3] --> label tensor with shape float32[1,N], store label index of N objeces
-   *   - tensors[4] --> proto-mask tensor with shape float32[1,32,160,160]
-   * \param tensors Tensors output from YOLO segmentation model.
-   */
-  void validate_input_params(const std::vector<Tensor> & tensors);
-
-  /**
    * \brief Calculate binary mask(in mono8 format) for detected objects
    * \param mask_in 2D vector with shape [n, mask_dim].
    * \param protos  2D vector with shape [mask_dim, mask_h*mask_w].
@@ -97,6 +83,7 @@ private:
       const int top_k);
 
   std::map<int, std::string> label_map_;
+  std::vector<TensorSpec> tensor_specs_;
 
   // member for NMS
   float score_thres_;

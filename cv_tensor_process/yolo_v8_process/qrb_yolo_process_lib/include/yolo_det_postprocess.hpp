@@ -37,6 +37,7 @@ public:
 
 private:
   std::map<int, std::string> label_map_;
+  std::vector<TensorSpec> tensor_specs_;
 
   // member for NMS
   float score_thres_;

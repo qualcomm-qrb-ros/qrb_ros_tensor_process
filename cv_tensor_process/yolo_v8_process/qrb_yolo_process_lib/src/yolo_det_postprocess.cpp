@@ -42,69 +42,23 @@ YoloDetPostProcessor::YoloDetPostProcessor(const std::string & label_file,
     std::cerr << "YAML Exception: " << e.what() << std::endl;
     label_map_.clear();
   }
+
+  // init tensor specs
+  tensor_specs_ = {
+    { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
+    { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "class_idx", TensorDataType::FLOAT32, { 1, 8400 } },
+  };
 }
 
 void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
     std::vector<YoloInstance> & instances)
 {
-  std::ostringstream oss;
-
-  /**
-   * Input params check
-   *
-   * Yolo TFLite model output 3 tensors shown below, N means the detected object count in one
-   * inference cycle, and is a fixed value up to model
-   *   - tensors[0] --> bbox tensor with shape float32[1,N,4], store the coordinate info of bounding
-   *     box for N objects
-   *   - tensors[1] --> score tensor with shape float32[1,N], store confidence of N objeces
-   *   - tensors[2] --> label tensor with shape float32[1,N], store label index of N objeces
-   */
-  if (tensors.size() != 3) {
-    oss << "Expect 3 tensors but got " << tensors.size();
-    throw std::invalid_argument(oss.str());
-  }
+  validate_tensors(tensors, tensor_specs_);
 
   const Tensor & tensor_bbox = tensors[0];
   const Tensor & tensor_score = tensors[1];
   const Tensor & tensor_label = tensors[2];
-
-  bool err = true;
-  do {
-    // tensor_bbox shape check
-    if (tensor_bbox.shape[0] != 1 || tensor_bbox.shape[2] != 4 ||
-        tensor_bbox.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_bbox: (" << tensor_bbox.shape[0] << "," << tensor_bbox.shape[1] << ","
-          << tensor_bbox.shape[2] << "), dtype=" << static_cast<int>(tensor_bbox.dtype);
-      break;
-    }
-
-    // tensor_score shape check
-    if (tensor_score.shape[0] != 1 || tensor_score.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_score: (" << tensor_score.shape[0] << "," << tensor_score.shape[1] << "), "
-          << "dtype: " << static_cast<int>(tensor_score.dtype);
-      break;
-    }
-
-    // tensor_label shape check
-    if (tensor_label.shape[0] != 1 || tensor_label.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_label: (" << tensor_label.shape[0] << "," << tensor_label.shape[1] << "), "
-          << "dtype: " << static_cast<int>(tensor_label.dtype);
-      break;
-    }
-
-    // obj count check
-    if (tensor_bbox.shape[1] != tensor_score.shape[1] ||
-        tensor_bbox.shape[1] != tensor_label.shape[1]) {
-      oss << "Inconsistent obj count, " << " tensor_bbox=" << tensor_bbox.shape[1]
-          << " tensor_score=" << tensor_score.shape[1] << " tensor_label=" << tensor_label.shape[1];
-      break;
-    }
-    err = false;
-  } while (0);
-
-  if (err) {
-    throw std::invalid_argument(oss.str());
-  }
 
   // tensor data parse
   std::vector<std::string> vec_class;

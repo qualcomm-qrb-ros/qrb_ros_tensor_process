@@ -52,56 +52,6 @@ YoloSegPostProcessor::YoloSegPostProcessor(const std::string & label_file,
   };
 }
 
-void YoloSegPostProcessor::non_maximum_suppression(const std::vector<Tensor> & tensors,
-    const float score_thres,
-    const float iou_thres,
-    std::vector<int> & indices,
-    const float eta,
-    const int top_k)
-{
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
-
-  std::vector<int> indices_1st;
-  std::vector<cv::Rect> bboxes;
-  std::vector<float> scores;
-
-  // allocate mem for perf, assuming the valid objects is around NMS_RESERVE_CNT
-  const int NMS_RESERVE_CNT = 16;
-  indices_1st.reserve(NMS_RESERVE_CNT);
-  bboxes.reserve(NMS_RESERVE_CNT);
-  scores.reserve(NMS_RESERVE_CNT);
-
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
-
-  for (uint32_t i = 0; i < tensor_bbox.shape[1]; ++i) {
-    if (ptr_score[i] < score_thres) {
-      continue;
-    }
-    indices_1st.emplace_back(i);
-
-    // model returns TLBR bbox, convert to TLWH
-    std::vector<float> box =
-        BoundingBox({ ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] },
-            BoundingBox::BoxFmt::TLBR)
-            .to_tlwh_coords();
-
-    bboxes.emplace_back(cv::Rect(box[0], box[1], box[2], box[3]));
-    scores.emplace_back(ptr_score[i]);
-  }
-
-  // cv::NMS processing
-  std::vector<int> indices_2nd;
-  cv::dnn::NMSBoxes(bboxes, scores, score_thres, iou_thres, indices_2nd, eta, top_k);
-
-  // get final indices
-  indices.reserve(indices_2nd.size());
-  for (auto & idx : indices_2nd) {
-    indices.emplace_back(indices_1st[idx]);
-  }
-}
-
 void YoloSegPostProcessor::crop_masks(std::vector<std::vector<uint8_t>> & bin_masks,
     const std::vector<BoundingBox> & bboxes,
     const int input_width,
@@ -183,8 +133,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
 {
   validate_tensors(tensors, tensor_specs_);
   std::vector<int> indices;
-  // The non_maximum_suppression function modifies the 'indices' vector to store the final selected
-  // indices.
+
   non_maximum_suppression(tensors, score_thres_, iou_thres_, indices, eta_, top_k_);
 
   const int n = indices.size();
@@ -192,12 +141,11 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
     return;
   }
 
-  // initialization
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
-  float * ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
-  float * ptr_label = reinterpret_cast<float *>(tensors[3].p_vec->data());
-  float * ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
+  const float * const ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
+  const float * const ptr_label = reinterpret_cast<float *>(tensors[3].p_vec->data());
+  const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
 
   // fixed value required by model
   const std::vector<int> input_shape = { 640, 640 };
@@ -210,8 +158,8 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   vec_proto_mask.reserve(mask_dims);
   for (int i = 0; i < mask_dims; ++i) {
     // Get the start and end pointers for the current dimension
-    float * p_head = ptr_proto_mask + i * mask_size;
-    float * p_tail = p_head + mask_size;
+    const float * const p_head = ptr_proto_mask + i * mask_size;
+    const float * const p_tail = p_head + mask_size;
 
     vec_proto_mask.emplace_back(p_head, p_tail);
   }
@@ -219,7 +167,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   // populate valid instance mask matrix, [1, num_preds, mask_dims] -> [n, mask_dims]
   std::vector<std::vector<float>> vec_mask(n, std::vector<float>(mask_dims));
   for (int i = 0; i < n; i++) {
-    float * ptr = ptr_mask + indices[i] * mask_dims;
+    const float * const ptr = ptr_mask + indices[i] * mask_dims;
 
     // copy the entire row o mask
     std::memcpy(vec_mask[i].data(), ptr, mask_dims * sizeof(float));
@@ -229,7 +177,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   std::vector<BoundingBox> vec_bbox;
   vec_bbox.reserve(n);
   for (auto & idx : indices) {
-    float * p = ptr_bbox[idx];
+    const float * const p = ptr_bbox[idx];
     BoundingBox bbox = BoundingBox({ p[0], p[1], p[2], p[3] }, BoundingBox::BoxFmt::TLBR);
     vec_bbox.push_back(bbox);
   }
@@ -244,7 +192,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
 
     std::string label;
     try {
-      label = label_map_.at(ptr_label[idx]);
+      label = label_map_.at(static_cast<int>(ptr_label[idx]));
     } catch (const std::out_of_range & e) {
       label = "unknown";
     }

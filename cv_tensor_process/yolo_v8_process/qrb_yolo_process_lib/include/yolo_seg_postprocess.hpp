@@ -68,20 +68,6 @@ private:
       const int mask_width,
       const int mask_height);
 
-  /**
-   * \brief Performs non-maximum-suppression to filter out valid object.
-   * \param tensors Tensors output from YOLO segmentation model.
-   * \param score_thres Object with score higher than threshold will be kept
-   * \param iou_thres iou(intersection over union) threshold to filter overlapping bbox
-   * \param indices (Output) Indices of valid object after NMS.
-   */
-  void non_maximum_suppression(const std::vector<Tensor> & tensors,
-      const float score_thres,
-      const float iou_thres,
-      std::vector<int> & indices,
-      const float eta,
-      const int top_k);
-
   std::map<int, std::string> label_map_;
   std::vector<TensorSpec> tensor_specs_;
 

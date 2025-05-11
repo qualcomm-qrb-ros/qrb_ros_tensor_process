@@ -131,6 +131,20 @@ std::string get_tensor_shape_str(const TensorSpec & tensor);
  */
 int make_cvtype(TensorDataType dtype, int channel);
 
+/**
+ * \brief Performs non-maximum-suppression to filter out valid object.
+ * \param tensors Tensors output from YOLO segmentation model.
+ * \param score_thres Object with score higher than threshold will be kept
+ * \param iou_thres iou(intersection over union) threshold to filter overlapping bbox
+ * \param indices (Output) Indices of valid object after NMS.
+ */
+void non_maximum_suppression(const std::vector<Tensor> & tensors,
+    const float score_thres,
+    const float iou_thres,
+    std::vector<int> & indices,
+    const float eta,
+    const int top_k);
+
 }  // namespace qrb::yolo_process
 
 #endif  // _QRB_YOLO_PROCESS_COMMON_HPP_

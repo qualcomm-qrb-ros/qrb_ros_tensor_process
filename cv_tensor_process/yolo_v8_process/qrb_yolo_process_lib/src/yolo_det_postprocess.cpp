@@ -55,54 +55,19 @@ void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
     std::vector<YoloInstance> & instances)
 {
   validate_tensors(tensors, tensor_specs_);
-
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
-  const Tensor & tensor_label = tensors[2];
-
-  // tensor data parse
-  std::vector<std::string> vec_class;
-  std::vector<float> vec_score;
-  std::vector<cv::Rect> vec_bbox;
-
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
-  float * ptr_label = reinterpret_cast<float *>(tensor_label.p_vec->data());
-
-  uint32_t obj_cnt = tensor_bbox.shape[1];
-  for (uint32_t i = 0; i < obj_cnt; ++i) {
-    float score = ptr_score[i];
-    // filter data to reduce computing in NMS
-    if (score < score_thres_) {
-      continue;
-    }
-
-    // get label tring
-    std::string label;
-    int label_idx = ptr_label[i];
-    try {
-      label = label_map_.at(label_idx);
-    } catch (const std::out_of_range & e) {
-      label = "unknown";
-    }
-
-    try {  // model returns TLBR bbox, convert to TLWH
-      BBoxCoords tlbr_coord = { ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] };
-      BBoxCoords tlwh_box = BoundingBox(tlbr_coord, BoundingBox::BoxFmt::TLBR).to_tlwh_coords();
-      vec_bbox.push_back(cv::Rect(tlwh_box[0], tlwh_box[1], tlwh_box[2], tlwh_box[3]));
-      vec_class.push_back(label);
-      vec_score.push_back(score);
-    } catch (std::invalid_argument & e) {
-      continue;
-    }
-  }
-
   std::vector<int> indices;
-  cv::dnn::NMSBoxes(vec_bbox, vec_score, score_thres_, iou_thres_, indices);
+  non_maximum_suppression(tensors, score_thres_, iou_thres_, indices, eta_, top_k_);
 
-  for (std::vector<int>::iterator it = indices.begin(); it != indices.end(); ++it) {
-    YoloInstance instance(vec_bbox[*it].x, vec_bbox[*it].y, vec_bbox[*it].width,
-        vec_bbox[*it].height, BoundingBox::BoxFmt::TLWH, vec_score[*it], vec_class[*it]);
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
+  const float * const ptr_label = reinterpret_cast<float *>(tensors[2].p_vec->data());
+
+  for (auto & idx : indices) {
+    float score = ptr_score[idx];
+
+    float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
+    float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
+    float * ptr_label = reinterpret_cast<float *>(tensor_label.p_vec->data());
 
     instances.push_back(instance);
   }

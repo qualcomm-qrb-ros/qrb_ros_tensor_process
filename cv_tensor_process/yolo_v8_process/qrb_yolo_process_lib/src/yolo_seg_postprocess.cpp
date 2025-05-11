@@ -47,7 +47,7 @@ YoloSegPostProcessor::YoloSegPostProcessor(const std::string & label_file,
     { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
     { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
     { "masks", TensorDataType::FLOAT32, { 1, 8400, 32 } },
-    { "class_idx", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "class_idx", TensorDataType::UINT8, { 1, 8400 } },
     { "protos", TensorDataType::FLOAT32, { 1, 32, 160, 160 } },
   };
 }
@@ -144,7 +144,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
   const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
   const float * const ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
-  const float * const ptr_label = reinterpret_cast<float *>(tensors[3].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[3].p_vec->data());
   const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
 
   // fixed value required by model
@@ -192,7 +192,7 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
 
     std::string label;
     try {
-      label = label_map_.at(static_cast<int>(ptr_label[idx]));
+      label = label_map_.at(ptr_label[idx]);
     } catch (const std::out_of_range & e) {
       label = "unknown";
     }

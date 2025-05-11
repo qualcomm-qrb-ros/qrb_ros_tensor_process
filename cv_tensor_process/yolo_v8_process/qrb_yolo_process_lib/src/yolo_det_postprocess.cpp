@@ -47,7 +47,7 @@ YoloDetPostProcessor::YoloDetPostProcessor(const std::string & label_file,
   tensor_specs_ = {
     { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
     { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
-    { "class_idx", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "class_idx", TensorDataType::UINT8, { 1, 8400 } },
   };
 }
 
@@ -60,14 +60,19 @@ void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
 
   const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
   const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
-  const float * const ptr_label = reinterpret_cast<float *>(tensors[2].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[2].p_vec->data());
 
   for (auto & idx : indices) {
     float score = ptr_score[idx];
 
-    float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
-    float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
-    float * ptr_label = reinterpret_cast<float *>(tensor_label.p_vec->data());
+    std::string label;
+    try {
+      label = label_map_.at(ptr_label[idx]);
+    } catch (const std::out_of_range & e) {
+      label = "unknown";
+    }
+    YoloInstance instance(ptr_bbox[idx][0], ptr_bbox[idx][1], ptr_bbox[idx][2], ptr_bbox[idx][3],
+        BoundingBox::BoxFmt::TLBR, score, label);
 
     instances.push_back(instance);
   }

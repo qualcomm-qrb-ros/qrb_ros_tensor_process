@@ -79,8 +79,7 @@ void validate_tensors(const std::vector<Tensor> & tensors, const std::vector<Ten
 
     // Check data type
     if (tensor.dtype != spec.dtype || tensor.shape != spec.shape) {
-      oss << "Tensor spec mismatch,"
-          << " expected " << get_tensor_shape_str(spec) << ", but got "
+      oss << "Tensor spec mismatch," << " expected " << get_tensor_shape_str(spec) << ", but got "
           << get_tensor_shape_str(tensor);
       is_valid = false;
       break;

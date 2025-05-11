@@ -53,7 +53,8 @@ void YoloSegPostProcessNode::populate_tensor_from_msg(const custom_msg::TensorLi
 {
   tensors.reserve(msg->tensor_list.size());
   for (uint32_t i = 0; i < msg->tensor_list.size(); i++) {
-    tensors.emplace_back(msg->tensor_list[i].name, qrb::yolo_process::TensorDataType::FLOAT32,
+    tensors.emplace_back(msg->tensor_list[i].name,
+        static_cast<qrb::yolo_process::TensorDataType>(msg->tensor_list[i].data_type),
         msg->tensor_list[i].shape, &msg->tensor_list[i].data);
   }
 }

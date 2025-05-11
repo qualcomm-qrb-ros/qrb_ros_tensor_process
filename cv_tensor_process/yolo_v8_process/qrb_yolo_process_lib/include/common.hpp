@@ -58,7 +58,6 @@ struct Tensor : public TensorSpec
   }
 };
 
-
 /**
  * \brief YOLO instance info structure
  */

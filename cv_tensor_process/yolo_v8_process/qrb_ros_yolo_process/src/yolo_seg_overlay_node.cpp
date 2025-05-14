@@ -11,25 +11,35 @@ YoloSegOverlayNode::YoloSegOverlayNode(const rclcpp::NodeOptions & options)
   : Node("yolo_seg_overlay_node", options)
 {
   this->declare_parameter<std::string>("target_res", "0x0");
-  std::string target_res = this->get_parameter("target_res").as_string();
+  this->declare_parameter<std::string>("mask_res", "0x0");
+  std::string mask_res = this->get_parameter("mask_res").as_string();
+  std::string resize_res = this->get_parameter("target_res").as_string();
 
-  // params check
-  std::transform(target_res.begin(), target_res.end(), target_res.begin(), ::tolower);
-  size_t split_pos = target_res.find('x');
-  if (split_pos == std::string::npos) {
-    std::ostringstream oss;
-    oss << this->get_name() << ": Invalid target_res format: " << target_res << ", ";
-    oss << "support format: <width>x<height>" << std::endl;
-    RCLCPP_ERROR_STREAM(this->get_logger(), oss.str());
-    throw std::invalid_argument(oss.str());
-  }
-  resize_width_ = std::stoi(target_res.substr(0, split_pos));
-  resize_height_ = std::stoi(target_res.substr(split_pos + 1));
+  auto parse_res = [](const std::string & res, int & width, int & height) {
+    std::string resolution = res;
+    std::transform(resolution.begin(), resolution.end(), resolution.begin(), ::tolower);
+    size_t split_pos = resolution.find('x');
+    if (split_pos == std::string::npos) {
+      std::ostringstream oss;
+      oss << "Invalid resolution format: " << resolution << ", ";
+      oss << "support format: <width>x<height>";
+      throw std::invalid_argument(oss.str());
+    }
+    width = std::stoi(resolution.substr(0, split_pos));
+    height = std::stoi(resolution.substr(split_pos + 1));
+  };
 
+  parse_res(resize_res, resize_width_, resize_height_);
   if (resize_width_ <= 0 || resize_height_ <= 0) {
     throw std::invalid_argument(
-        "YoloSegOverlayNode: Invalid resize value: " + std::to_string(resize_width_) + "," +
+        "YoloSegOverlayNode: Invalid resize resolution: " + std::to_string(resize_width_) + "x" +
         std::to_string(resize_height_));
+  }
+
+  parse_res(mask_res, mask_width_, mask_height_);
+  if (mask_width_ <= 0 || mask_height_ <= 0) {
+    throw std::invalid_argument("YoloSegOverlayNode: Invalid mask value: " +
+                                std::to_string(mask_width_) + "," + std::to_string(mask_height_));
   }
 
   img_sub_.subscribe(this, "resized_image");
@@ -38,6 +48,8 @@ YoloSegOverlayNode::YoloSegOverlayNode(const rclcpp::NodeOptions & options)
 
   exact_sync_.reset(new ExactSync(ExactPolicy(10), img_sub_, yolo_seg_sub_));
   exact_sync_->registerCallback(std::bind(&YoloSegOverlayNode::msg_callback, this, _1, _2));
+  RCLCPP_INFO(this->get_logger(), "YoloSegOverlayNode: mask_res: %dx%d, resize_res: %dx%d",
+      mask_width_, mask_height_, resize_width_, resize_height_);
 
   RCLCPP_INFO(this->get_logger(), "init done~");
 }
@@ -71,17 +83,16 @@ void YoloSegOverlayNode::draw_inplace(std::vector<YoloInstance> & detections, cv
   }
 
   // overlay mask
-
   // merge all mask together
-  cv::Mat merged_mask(160, 160, CV_8UC1, cv::Scalar(0));
+  cv::Mat merged_mask(mask_height_, mask_height_, CV_8UC1, cv::Scalar(0));
   for (auto & det : detections) {
-    cv::Mat mask(160, 160, CV_8UC1, det.mask.data());
+    cv::Mat mask(mask_height_, mask_height_, CV_8UC1, det.mask.data());
     cv::add(mask, merged_mask, merged_mask);
   }
 
-  // scale mask to 640x640
+  // resize mask
   cv::Mat resized_image;
-  cv::resize(merged_mask, resized_image, cv::Size(), 4, 4, cv::INTER_LINEAR);
+  cv::resize(merged_mask, resized_image, cv::Size(resize_width_, resize_height_), cv::INTER_LINEAR);
 
   // create a color mask
   cv::Mat colorMask = cv::Mat::zeros(resized_image.size(), CV_8UC3);

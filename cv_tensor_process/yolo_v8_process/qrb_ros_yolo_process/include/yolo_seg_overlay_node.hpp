@@ -38,6 +38,8 @@ private:
   void draw_inplace(std::vector<YoloInstance> & detections, cv::Mat & img);
   int resize_width_;
   int resize_height_;
+  int mask_width_;
+  int mask_height_;
   std::unique_ptr<ExactSync> exact_sync_{ nullptr };
   std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>> pub_{ nullptr };
   message_filters::Subscriber<qrb_ros_vision_msgs::msg::Detection2DWithMaskArray> yolo_seg_sub_;

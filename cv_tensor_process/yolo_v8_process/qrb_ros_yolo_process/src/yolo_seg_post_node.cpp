@@ -53,13 +53,9 @@ void YoloSegPostProcessNode::populate_tensor_from_msg(const custom_msg::TensorLi
 {
   tensors.reserve(msg->tensor_list.size());
   for (uint32_t i = 0; i < msg->tensor_list.size(); i++) {
-    qrb::yolo_process::Tensor tensor;
-    tensor.name = msg->tensor_list[i].name;
-    tensor.shape = msg->tensor_list[i].shape;
-    tensor.p_vec = &msg->tensor_list[i].data;
-    tensor.dtype = qrb::yolo_process::TensorDataType::FLOAT32;
-
-    tensors.push_back(std::move(tensor));
+    tensors.emplace_back(msg->tensor_list[i].name,
+        static_cast<qrb::yolo_process::TensorDataType>(msg->tensor_list[i].data_type),
+        msg->tensor_list[i].shape, &msg->tensor_list[i].data);
   }
 }
 
@@ -115,18 +111,25 @@ void YoloSegPostProcessNode::msg_callback(
 
   // process tensor
   std::vector<qrb::yolo_process::YoloInstance> instances;
-  processor_->process(tensors, instances);
-
-  // populate ros msg
-  qrb_ros_vision_msgs::msg::Detection2DWithMaskArray detect_arr;
-  detect_arr.header.stamp = msg->header.stamp;
+  try {
+    processor_->process(tensors, instances);
+  } catch (const std::invalid_argument & e) {
+    RCLCPP_ERROR(this->get_logger(), "Error: %s", e.what());
+    return;
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(this->get_logger(), "Error: %s", e.what());
+    return;
+  } catch (...) {
+    RCLCPP_ERROR(this->get_logger(), "Error: unexpected exception");
+    return;
+  }
 
   // construct ros msg and publish
-  qrb_ros_vision_msgs::msg::Detection2DWithMaskArray pub_msg;
-  pub_msg.header.stamp = msg->header.stamp;
-  populate_pub_msg(pub_msg, instances);
+  auto pub_msg = std::make_unique<qrb_ros_vision_msgs::msg::Detection2DWithMaskArray>();
+  pub_msg->header = msg->header;
+  populate_pub_msg(*pub_msg, instances);
 
-  pub_->publish(pub_msg);
+  pub_->publish(std::move(pub_msg));
   RCLCPP_DEBUG(this->get_logger(), "<<< YOLO SEG post-process end");
 }
 

@@ -50,14 +50,9 @@ void YoloDetPostProcessNode::populate_tensor_from_msg(const custom_msg::TensorLi
 {
   tensors.reserve(msg->tensor_list.size());
   for (uint32_t i = 0; i < msg->tensor_list.size(); i++) {
-    qrb::yolo_process::Tensor tensor;
-
-    tensor.name = msg->tensor_list[i].name;
-    tensor.shape = msg->tensor_list[i].shape;
-    tensor.p_vec = &msg->tensor_list[i].data;
-    tensor.dtype = qrb::yolo_process::TensorDataType::FLOAT32;
-
-    tensors.push_back(std::move(tensor));
+    tensors.emplace_back(msg->tensor_list[i].name,
+        static_cast<qrb::yolo_process::TensorDataType>(msg->tensor_list[i].data_type),
+        msg->tensor_list[i].shape, &msg->tensor_list[i].data);
   }
 }
 
@@ -115,11 +110,11 @@ void YoloDetPostProcessNode::msg_callback(const custom_msg::TensorList::SharedPt
   }
 
   // construct ros msg and publish
-  vision_msgs::msg::Detection2DArray det_2d_arr;
-  det_2d_arr.header.stamp = msg->header.stamp;
-  populate_pub_msg(det_2d_arr, instances);
+  auto det_2d_arr = std::make_unique<vision_msgs::msg::Detection2DArray>();
+  det_2d_arr->header.stamp = msg->header.stamp;
+  populate_pub_msg(*det_2d_arr, instances);
 
-  pub_->publish(det_2d_arr);
+  pub_->publish(std::move(det_2d_arr));
   RCLCPP_DEBUG(this->get_logger(), ">>> YOLO DET post-process end");
 }
 

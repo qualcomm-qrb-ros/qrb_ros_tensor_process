@@ -42,113 +42,37 @@ YoloDetPostProcessor::YoloDetPostProcessor(const std::string & label_file,
     std::cerr << "YAML Exception: " << e.what() << std::endl;
     label_map_.clear();
   }
+
+  // init tensor specs
+  tensor_specs_ = {
+    { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
+    { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "class_idx", TensorDataType::UINT8, { 1, 8400 } },
+  };
 }
 
 void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
     std::vector<YoloInstance> & instances)
 {
-  std::ostringstream oss;
+  validate_tensors(tensors, tensor_specs_);
+  std::vector<int> indices;
+  non_maximum_suppression(tensors, score_thres_, iou_thres_, indices, eta_, top_k_);
 
-  /**
-   * Input params check
-   *
-   * Yolo TFLite model output 3 tensors shown below, N means the detected object count in one
-   * inference cycle, and is a fixed value up to model
-   *   - tensors[0] --> bbox tensor with shape float32[1,N,4], store the coordinate info of bounding
-   *     box for N objects
-   *   - tensors[1] --> score tensor with shape float32[1,N], store confidence of N objeces
-   *   - tensors[2] --> label tensor with shape float32[1,N], store label index of N objeces
-   */
-  if (tensors.size() != 3) {
-    oss << "Expect 3 tensors but got " << tensors.size();
-    throw std::invalid_argument(oss.str());
-  }
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[2].p_vec->data());
 
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
-  const Tensor & tensor_label = tensors[2];
+  for (auto & idx : indices) {
+    float score = ptr_score[idx];
 
-  bool err = true;
-  do {
-    // tensor_bbox shape check
-    if (tensor_bbox.shape[0] != 1 || tensor_bbox.shape[2] != 4 ||
-        tensor_bbox.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_bbox: (" << tensor_bbox.shape[0] << "," << tensor_bbox.shape[1] << ","
-          << tensor_bbox.shape[2] << "), dtype=" << static_cast<int>(tensor_bbox.dtype);
-      break;
-    }
-
-    // tensor_score shape check
-    if (tensor_score.shape[0] != 1 || tensor_score.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_score: (" << tensor_score.shape[0] << "," << tensor_score.shape[1] << "), "
-          << "dtype: " << static_cast<int>(tensor_score.dtype);
-      break;
-    }
-
-    // tensor_label shape check
-    if (tensor_label.shape[0] != 1 || tensor_label.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor_label: (" << tensor_label.shape[0] << "," << tensor_label.shape[1] << "), "
-          << "dtype: " << static_cast<int>(tensor_label.dtype);
-      break;
-    }
-
-    // obj count check
-    if (tensor_bbox.shape[1] != tensor_score.shape[1] ||
-        tensor_bbox.shape[1] != tensor_label.shape[1]) {
-      oss << "Inconsistent obj count, " << " tensor_bbox=" << tensor_bbox.shape[1]
-          << " tensor_score=" << tensor_score.shape[1] << " tensor_label=" << tensor_label.shape[1];
-      break;
-    }
-    err = false;
-  } while (0);
-
-  if (err) {
-    throw std::invalid_argument(oss.str());
-  }
-
-  // tensor data parse
-  std::vector<std::string> vec_class;
-  std::vector<float> vec_score;
-  std::vector<cv::Rect> vec_bbox;
-
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
-  float * ptr_label = reinterpret_cast<float *>(tensor_label.p_vec->data());
-
-  uint32_t obj_cnt = tensor_bbox.shape[1];
-  for (uint32_t i = 0; i < obj_cnt; ++i) {
-    float score = ptr_score[i];
-    // filter data to reduce computing in NMS
-    if (score < score_thres_) {
-      continue;
-    }
-
-    // get label tring
     std::string label;
-    int label_idx = ptr_label[i];
     try {
-      label = label_map_.at(label_idx);
+      label = label_map_.at(ptr_label[idx]);
     } catch (const std::out_of_range & e) {
       label = "unknown";
     }
-
-    try {  // model returns TLBR bbox, convert to TLWH
-      BBoxCoords tlbr_coord = { ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] };
-      BBoxCoords tlwh_box = BoundingBox(tlbr_coord, BoundingBox::BoxFmt::TLBR).to_tlwh_coords();
-      vec_bbox.push_back(cv::Rect(tlwh_box[0], tlwh_box[1], tlwh_box[2], tlwh_box[3]));
-      vec_class.push_back(label);
-      vec_score.push_back(score);
-    } catch (std::invalid_argument & e) {
-      continue;
-    }
-  }
-
-  std::vector<int> indices;
-  cv::dnn::NMSBoxes(vec_bbox, vec_score, score_thres_, iou_thres_, indices);
-
-  for (std::vector<int>::iterator it = indices.begin(); it != indices.end(); ++it) {
-    YoloInstance instance(vec_bbox[*it].x, vec_bbox[*it].y, vec_bbox[*it].width,
-        vec_bbox[*it].height, BoundingBox::BoxFmt::TLWH, vec_score[*it], vec_class[*it]);
+    YoloInstance instance(ptr_bbox[idx][0], ptr_bbox[idx][1], ptr_bbox[idx][2], ptr_bbox[idx][3],
+        BoundingBox::BoxFmt::TLBR, score, label);
 
     instances.push_back(instance);
   }

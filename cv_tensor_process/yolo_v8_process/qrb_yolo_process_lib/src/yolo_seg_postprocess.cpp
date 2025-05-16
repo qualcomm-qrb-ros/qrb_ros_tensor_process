@@ -41,123 +41,15 @@ YoloSegPostProcessor::YoloSegPostProcessor(const std::string & label_file,
     std::cerr << "YAML Exception: " << e.what() << std::endl;
     label_map_.clear();
   }
-}
 
-void YoloSegPostProcessor::validate_input_params(const std::vector<Tensor> & tensors)
-{
-  std::ostringstream oss;
-
-  if (tensors.size() != 5) {
-    oss << "Expect 5 tensors, but got: " << tensors.size();
-    throw std::invalid_argument(oss.str());
-  }
-
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
-  const Tensor & tensor_mask = tensors[2];
-  const Tensor & tensor_label = tensors[3];
-  const Tensor & tensor_proto = tensors[4];
-
-  bool err = true;
-  do {
-    // tensor_bbox shape check
-    if (tensor_bbox.shape[0] != 1 || tensor_bbox.shape[2] != 4 ||
-        tensor_bbox.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor: " << get_tensor_shape_str(tensor_bbox);
-      break;
-    }
-
-    // tensor_score shape check
-    if (tensor_score.shape[0] != 1 || tensor_score.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor: " << get_tensor_shape_str(tensor_score);
-      break;
-    }
-
-    // tensor_label shape check
-    if (tensor_label.shape[0] != 1 || tensor_label.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor: " << get_tensor_shape_str(tensor_label);
-      break;
-    }
-
-    // tensor_mask shape check
-    if (tensor_mask.shape[0] != 1 || tensor_mask.shape[1] != 32 ||
-        tensor_mask.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor: " << get_tensor_shape_str(tensor_mask);
-      break;
-    }
-
-    // tensor_proto shape check
-    if (tensor_proto.shape[0] != 1 || tensor_proto.shape[1] != 32 || tensor_proto.shape[2] != 160 ||
-        tensor_proto.shape[3] != 160 || tensor_proto.dtype != TensorDataType::FLOAT32) {
-      oss << "bad tensor: " << get_tensor_shape_str(tensor_proto);
-      break;
-    }
-
-    // obj count check
-    if (tensor_bbox.shape[1] != tensor_score.shape[1] ||
-        tensor_bbox.shape[1] != tensor_label.shape[1] ||
-        tensor_bbox.shape[1] != tensor_mask.shape[2]) {
-      oss << "Inconsistent obj count, " << " tensor_bbox=" << tensor_bbox.shape[1]
-          << " tensor_score=" << tensor_score.shape[1] << " tensor_label=" << tensor_label.shape[1]
-          << " tensor_mask=" << tensor_mask.shape[2];
-      break;
-    }
-    err = false;
-  } while (0);
-
-  if (err) {
-    throw std::invalid_argument(oss.str());
-  }
-}
-
-void YoloSegPostProcessor::non_maximum_suppression(const std::vector<Tensor> & tensors,
-    const float score_thres,
-    const float iou_thres,
-    std::vector<int> & indices,
-    const float eta,
-    const int top_k)
-{
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
-
-  std::vector<int> indices_1st;
-  std::vector<cv::Rect> bboxes;
-  std::vector<float> scores;
-
-  // allocate mem for perf, assuming the valid objects is around NMS_RESERVE_CNT
-  const int NMS_RESERVE_CNT = 16;
-  indices_1st.reserve(NMS_RESERVE_CNT);
-  bboxes.reserve(NMS_RESERVE_CNT);
-  scores.reserve(NMS_RESERVE_CNT);
-
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensor_bbox.p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensor_score.p_vec->data());
-
-  for (uint32_t i = 0; i < tensor_bbox.shape[1]; ++i) {
-    if (ptr_score[i] < score_thres) {
-      continue;
-    }
-    indices_1st.emplace_back(i);
-
-    // model returns TLBR bbox, convert to TLWH
-    std::vector<float> box =
-        BoundingBox({ ptr_bbox[i][0], ptr_bbox[i][1], ptr_bbox[i][2], ptr_bbox[i][3] },
-            BoundingBox::BoxFmt::TLBR)
-            .to_tlwh_coords();
-
-    bboxes.emplace_back(cv::Rect(box[0], box[1], box[2], box[3]));
-    scores.emplace_back(ptr_score[i]);
-  }
-
-  // cv::NMS processing
-  std::vector<int> indices_2nd;
-  cv::dnn::NMSBoxes(bboxes, scores, score_thres, iou_thres, indices_2nd, eta, top_k);
-
-  // get final indices
-  indices.reserve(indices_2nd.size());
-  for (auto & idx : indices_2nd) {
-    indices.emplace_back(indices_1st[idx]);
-  }
+  // init tensor specs
+  tensor_specs_ = {
+    { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
+    { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "masks", TensorDataType::FLOAT32, { 1, 8400, 32 } },
+    { "class_idx", TensorDataType::UINT8, { 1, 8400 } },
+    { "protos", TensorDataType::FLOAT32, { 1, 32, 160, 160 } },
+  };
 }
 
 void YoloSegPostProcessor::crop_masks(std::vector<std::vector<uint8_t>> & bin_masks,
@@ -239,8 +131,9 @@ void YoloSegPostProcessor::process_mask(const std::vector<std::vector<float>> & 
 void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
     std::vector<YoloInstance> & instances)
 {
-  validate_input_params(tensors);
+  validate_tensors(tensors, tensor_specs_);
   std::vector<int> indices;
+
   non_maximum_suppression(tensors, score_thres_, iou_thres_, indices, eta_, top_k_);
 
   const int n = indices.size();
@@ -248,12 +141,11 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
     return;
   }
 
-  // initialization
-  float(*ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
-  float * ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
-  float * ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
-  float * ptr_label = reinterpret_cast<float *>(tensors[3].p_vec->data());
-  float * ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
+  const float * const ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[3].p_vec->data());
+  const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
 
   // fixed value required by model
   const std::vector<int> input_shape = { 640, 640 };
@@ -265,26 +157,27 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   std::vector<std::vector<float>> vec_proto_mask;
   vec_proto_mask.reserve(mask_dims);
   for (int i = 0; i < mask_dims; ++i) {
-    float * p_head = ptr_proto_mask + i * mask_size;
-    float * p_tail = p_head + mask_size;
-    std::vector<float> proto_mask(p_head, p_tail);
+    // Get the start and end pointers for the current dimension
+    const float * const p_head = ptr_proto_mask + i * mask_size;
+    const float * const p_tail = p_head + mask_size;
 
-    vec_proto_mask.push_back(std::move(proto_mask));
+    vec_proto_mask.emplace_back(p_head, p_tail);
   }
 
-  // populate valid instance mask matrix, [1, mask_dims, 8400] -> [n, mask_dims]
-  std::vector<std::vector<float>> vec_mask(n, std::vector<float>(32));
+  // populate valid instance mask matrix, [1, num_preds, mask_dims] -> [n, mask_dims]
+  std::vector<std::vector<float>> vec_mask(n, std::vector<float>(mask_dims));
   for (int i = 0; i < n; i++) {
-    for (int j = 0; j < mask_dims; j++) {
-      vec_mask[i][j] = ptr_mask[indices[i] + 8400 * j];
-    }
+    const float * const ptr = ptr_mask + indices[i] * mask_dims;
+
+    // copy the entire row o mask
+    std::memcpy(vec_mask[i].data(), ptr, mask_dims * sizeof(float));
   }
 
   // instance mask processing: [n, mask_dims] * [mask_dims, 160*160] = [n, 160*160]
   std::vector<BoundingBox> vec_bbox;
   vec_bbox.reserve(n);
   for (auto & idx : indices) {
-    float * p = ptr_bbox[idx];
+    const float * const p = ptr_bbox[idx];
     BoundingBox bbox = BoundingBox({ p[0], p[1], p[2], p[3] }, BoundingBox::BoxFmt::TLBR);
     vec_bbox.push_back(bbox);
   }

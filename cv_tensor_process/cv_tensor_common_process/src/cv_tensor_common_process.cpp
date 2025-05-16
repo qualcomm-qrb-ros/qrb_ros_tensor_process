@@ -231,15 +231,15 @@ void CvTensorCommonProcessNode::process_core(
     default: {
       std::ostringstream oss;
       oss << "Unsupported tensor format: " << tensor_fmt_;
-      throw std::invalid_argument(oss.str());
+      RCLCPP_ERROR_STREAM(this->get_logger(), oss.str());
+      return;
     }
   }
+  auto msg_tensor_list = std::make_unique<qrb_ros_tensor_list_msgs::msg::TensorList>();
+  msg_tensor_list->header = msg->header;
 
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "publish tensor_list");
-  qrb_ros_tensor_list_msgs::msg::TensorList msg_tensor_list;
-  msg_tensor_list.tensor_list.push_back(msg_tensor);
-  msg_tensor_list.header = msg->header;
-  tensor_pub_->publish(msg_tensor_list);
+  msg_tensor_list->tensor_list.push_back(std::move(msg_tensor));
+  tensor_pub_->publish(std::move(msg_tensor_list));
 }
 
 }  // namespace qrb_ros::cv_tensor_common_process

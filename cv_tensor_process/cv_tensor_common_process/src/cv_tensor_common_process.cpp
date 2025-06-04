@@ -137,10 +137,9 @@ void CvTensorCommonProcessNode::process_core(
   if (msg->encoding == "nv12") {
     RCLCPP_DEBUG_STREAM(this->get_logger(), "color space convert begin");
     int stride = qrb_ros::transport::image_utils::align_width(msg->width);
-    int slice = qrb_ros::transport::image_utils::align_height(msg->height);
 
     cv::Mat img_nv12_tmp(
-        slice + slice / 2, stride, CV_8UC1, reinterpret_cast<uchar *>(img_data.get()));
+        msg->height * 3 / 2, stride, CV_8UC1, reinterpret_cast<uchar *>(img_data.get()));
     cv::cvtColor(img_nv12_tmp, image, cv::COLOR_YUV2RGB_NV12);
 
   } else if (msg->encoding == "rgb8" || msg->encoding == "bgr8") {

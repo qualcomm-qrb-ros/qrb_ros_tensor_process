@@ -27,7 +27,7 @@ public:
     MAX
   };
 
-  BoundingBox(const std::vector<float> & box, const BoxFmt fmt);
+  BoundingBox(const std::vector<float> & bbox, const BoxFmt fmt);
   ~BoundingBox() = default;
 
   BBoxCoords to_tlwh_coords() const;

@@ -9,21 +9,20 @@
 
 namespace qrb::yolo_process
 {
-BoundingBox::BoundingBox(const BBoxCoords & box, BoxFmt fmt)
+BoundingBox::BoundingBox(const BBoxCoords & bbox, BoxFmt fmt)
 {
-  if (box.size() != 4) {
+  const int box_size = 4;
+  if (bbox.size() != box_size) {
     std::ostringstream oss;
-    oss << "Invalid bounding box, expected 4 elements but got " << box.size() << " elements."
+    oss << "Invalid bounding box, expected 4 elements but got " << bbox.size() << " elements."
         << std::endl;
     throw std::invalid_argument(oss.str());
   }
-
-  if (box[0] < 0 || box[1] < 0 || box[2] < 0 || box[3] < 0) {
-    std::ostringstream oss;
-    oss << "Invalid bounding box: (";
-    std::copy(box.begin(), box.end(), std::ostream_iterator<float>(oss, ","));
-    oss << ")" << std::endl;
-    throw std::invalid_argument(oss.str());
+  BBoxCoords box = bbox;
+  for (int n = 0; n < box_size; ++n) {
+    if (box[n] < 0.0) {
+      box[n] = 0.0;
+    }
   }
 
   float tl_x, tl_y, br_x, br_y;
@@ -55,7 +54,7 @@ BoundingBox::BoundingBox(const BBoxCoords & box, BoxFmt fmt)
   }
   box_arr_ = { tl_x, tl_y, br_x, br_y };
 
-  if (tl_x < 0 || tl_y < 0 || br_x < tl_x || br_y < tl_y) {
+  if (tl_x < 0.0f || tl_y < 0.0f || br_x < tl_x || br_y < tl_y) {
     std::ostringstream oss;
     oss << "Invalid bounding box(TLBR): (";
     std::copy(box_arr_.begin(), box_arr_.end(), std::ostream_iterator<float>(oss, ","));

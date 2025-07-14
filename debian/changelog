@@ -1,0 +1,7 @@
+ros-jazzy-qrb-ros-yolo-process (1.0.0) noble; urgency=high
+
+  * First release for Debian package.
+
+ -- Xiao Li <xiaolee@qti.qualcomm.com>  Tue, 24 Jun 2025 06:33:09 -0000
+
+

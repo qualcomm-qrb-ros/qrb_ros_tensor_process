@@ -1,0 +1,7 @@
+ros-jazzy-qrb-ros-cv-tensor-common-process (0.0.0) noble; urgency=high
+
+  * First release for Debian package.
+
+ -- Xiao Li <xiaolee@qti.qualcomm.com>  Tue, 24 Jun 2025 04:04:48 -0000
+
+

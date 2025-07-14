@@ -2,7 +2,7 @@
   <name>qrb_yolo_process</name>
   <version>0.0.1</version>
   <description>Library for Yolo pre/post process</description>
-  <maintainer email="quic_xiaolee@quicinc.com">Xiao Li</maintainer>
+  <maintainer email="xiaolee.qti.qualcomm.com">Xiao Li</maintainer>
   <license>BSD-3-Clause-Clear</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

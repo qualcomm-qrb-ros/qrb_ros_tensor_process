@@ -58,9 +58,13 @@ void YoloDetPostProcessor::process(const std::vector<Tensor> & tensors,
   std::vector<int> indices;
   non_maximum_suppression(tensors, score_thres_, iou_thres_, indices, eta_, top_k_);
 
-  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
-  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
-  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[2].p_vec->data());
+  const int idx_boxes = get_tensor_idx(tensors, "boxes");
+  const int idx_scores = get_tensor_idx(tensors, "scores");
+  const int idx_class = get_tensor_idx(tensors, "class_idx");
+
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[idx_boxes].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[idx_scores].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[idx_class].p_vec->data());
 
   for (auto & idx : indices) {
     float score = ptr_score[idx];

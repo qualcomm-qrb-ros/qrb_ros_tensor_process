@@ -108,6 +108,22 @@ struct YoloInstance
 };
 
 /**
+ * \brief Retrieves the index of a tensor by its name from a list of tensors.
+ *
+ * This function searches through a vector of Tensor objects to find the one
+ * that matches the specified name. If found, it returns the index of the tensor
+ * within the vector. If no tensor with the given name is found, it throws an exception
+ *
+ * \param tensors A vector of Tensor objects to search.
+ * \param name The name of the tensor to find.
+ *
+ * \return The index of the tensor with the specified name.
+ *
+ * \throws std::invalid_argument If the tensor with the specified name is not found.
+ */
+int get_tensor_idx(const std::vector<Tensor> & tensors, const std::string & name);
+
+/**
  * \brief Validates a list of tensors against their expected specifications.
  *
  * This function checks whether the provided tensors match the expected specifications

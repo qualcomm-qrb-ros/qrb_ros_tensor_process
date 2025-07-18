@@ -1,6 +1,6 @@
 <package format="3">
   <name>qrb_yolo_process</name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <description>Library for Yolo pre/post process</description>
   <maintainer email="xiaolee@qti.qualcomm.com">Xiao Li</maintainer>
   <license>BSD-3-Clause-Clear</license>

@@ -2,7 +2,7 @@ Source: ros-jazzy-qrb-yolo-process
 Section: misc
 Priority: optional
 Maintainer: Xiao Li <xiaolee@qti.qualcomm.com>
-Build-Depends: debhelper-compat(=13), ros-jazzy-ament-cmake
+Build-Depends: debhelper-compat(=13), libopencv-dev, libyaml-cpp-dev, ros-jazzy-ament-cmake
 Homepage: 
 Standards-Version: 3.9.2
 

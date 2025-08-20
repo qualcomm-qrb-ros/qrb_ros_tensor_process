@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>qrb_ros_cv_tensor_common_process</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>Provided ROS nodes for pre-processing in CV AI models.</description>
   <maintainer email="xiaolee@qti.qualcomm.com">Xiao Li</maintainer>
   <license>BSD-3-Clause-Clear</license>
@@ -11,17 +11,14 @@
 
   <!-- Build Dependencies -->
   <depend>rclcpp</depend>
+  <depend>OpenCV</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>qrb_ros_transport_image_type</depend>
   <depend>lib_mem_dmabuf</depend>
   <depend>rclcpp_components</depend>
-
   <depend>qrb_ros_tensor_list_msgs</depend>
-
-  <!-- Runtime Dependencies -->
-  <!-- <exec_depend>std_msgs</exec_depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

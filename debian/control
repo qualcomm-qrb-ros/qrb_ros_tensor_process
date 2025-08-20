@@ -2,7 +2,7 @@ Source: ros-jazzy-qrb-ros-yolo-process
 Section: misc
 Priority: optional
 Maintainer: Xiao Li <xiaolee@qti.qualcomm.com>
-Build-Depends: debhelper-compat(=13), ros-jazzy-ament-cmake-auto, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-cv-bridge, ros-jazzy-message-filters, ros-jazzy-qrb-ros-tensor-list-msgs, ros-jazzy-qrb-ros-vision-msgs, ros-jazzy-qrb-yolo-process, ros-jazzy-rclcpp, ros-jazzy-rclcpp-components, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-vision-msgs
+Build-Depends: debhelper-compat(=13), libopencv-dev, ros-jazzy-ament-cmake-auto, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-cv-bridge, ros-jazzy-message-filters, ros-jazzy-qrb-ros-tensor-list-msgs, ros-jazzy-qrb-ros-vision-msgs, ros-jazzy-qrb-yolo-process, ros-jazzy-rclcpp, ros-jazzy-rclcpp-components, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-vision-msgs
 Homepage: 
 Standards-Version: 3.9.2
 

@@ -64,8 +64,23 @@ int make_cvtype(TensorDataType dtype, int channel)
   return cvType;
 }
 
+int get_tensor_idx(const std::vector<Tensor> & tensors, const std::string & name)
+{
+  for (size_t i = 0; i < tensors.size(); ++i) {
+    if (tensors[i].name == name) {
+      return static_cast<int>(i);
+    }
+  }
+  throw std::invalid_argument("Tensor with name '" + name + "' not found.");
+}
+
 void validate_tensors(const std::vector<Tensor> & tensors, const std::vector<TensorSpec> & specs)
 {
+  std::unordered_map<std::string, TensorSpec> spec_map;
+  for (const auto & spec : specs) {
+    spec_map[spec.name] = spec;
+  }
+
   bool is_valid = true;
   std::ostringstream oss;
   if (tensors.size() != specs.size()) {
@@ -73,18 +88,22 @@ void validate_tensors(const std::vector<Tensor> & tensors, const std::vector<Ten
     throw std::invalid_argument(oss.str());
   }
 
-  for (size_t i = 0; i < specs.size(); ++i) {
-    const Tensor & tensor = tensors[i];
-    const TensorSpec & spec = specs[i];
-
-    // Check data type
-    if (tensor.dtype != spec.dtype || tensor.shape != spec.shape) {
-      oss << "Tensor spec mismatch," << " expected " << get_tensor_shape_str(spec) << ", but got "
-          << get_tensor_shape_str(tensor);
+  for (const auto & tensor : tensors) {
+    auto it = spec_map.find(tensor.name);
+    if (it == spec_map.end()) {
+      oss << "Unexpected tensor: " << tensor.name << "\n";
       is_valid = false;
-      break;
+      continue;
+    }
+
+    const TensorSpec & expected = it->second;
+    if (tensor.dtype != expected.dtype || tensor.shape != expected.shape) {
+      oss << "Tensor '" << tensor.name << "' mismatch: expected " << get_tensor_shape_str(expected)
+          << ", but got " << get_tensor_shape_str(tensor) << "\n";
+      is_valid = false;
     }
   }
+
   if (!is_valid) {
     throw std::invalid_argument(oss.str());
   }
@@ -110,8 +129,10 @@ void non_maximum_suppression(const std::vector<Tensor> & tensors,
     const float eta,
     const int top_k)
 {
-  const Tensor & tensor_bbox = tensors[0];
-  const Tensor & tensor_score = tensors[1];
+  const int idx_boxes = get_tensor_idx(tensors, "boxes");
+  const int idx_scores = get_tensor_idx(tensors, "scores");
+  const Tensor & tensor_bbox = tensors[idx_boxes];
+  const Tensor & tensor_score = tensors[idx_scores];
 
   std::vector<int> indices_1st;
   std::vector<cv::Rect> bboxes;

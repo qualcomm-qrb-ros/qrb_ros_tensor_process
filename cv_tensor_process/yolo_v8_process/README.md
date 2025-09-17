@@ -2,7 +2,7 @@
   <h1>QRB ROS YOLOv8 PROCESSOR</h1>
   <p align="center">
   </p>
-  <p>ROS2 package for YOLOv8 detection and segmentation post-processing and visulization</p>
+  <p>ROS2 package for YOLOv8 detection and segmentation post-processing and visualization</p>
   
   <a href="https://ubuntu.com/download/qualcomm-iot" target="_blank"><img src="https://img.shields.io/badge/Qualcomm%20Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Qualcomm Ubuntu"></a>
   <a href="https://docs.ros.org/en/jazzy/" target="_blank"><img src="https://img.shields.io/badge/ROS%20Jazzy-1c428a?style=for-the-badge&logo=ros&logoColor=white" alt="Jazzy"></a>
@@ -24,7 +24,7 @@ The architecture diagram above illustrates all functional blocks in a complete Y
 - **Yolo Detection Overlay Node** : Provides visualization functionality for object detection results.
 - **Yolo Segmentation PostProcess Node** : Provides YOLOv8 segmentation post-processing functionality for tensor output from nn-inference nodes
 - **Yolo Segmentation Overlay Node** : Provides visualization functionality for image segmentation results.
-- **Yolo Processor Library** : Library fo YOLOv8 post-processing, required by upper-level ROS2 nodes.
+- **Yolo Processor Library** : Library for YOLOv8 post-processing, required by upper-level ROS2 nodes.
 
 ## 🔎 Table of Contents
 
@@ -124,7 +124,7 @@ The architecture diagram above illustrates all functional blocks in a complete Y
     <td>Publisher</td>
     <td>/yolo_detect_overlay</td>
     <td>sensor_msgs::msg::Image</td>
-    <td>The finaly image with detection info.</td>
+    <td>The final image with detection info.</td>
   </tr>
 </table>
 
@@ -213,7 +213,7 @@ The architecture diagram above illustrates all functional blocks in a complete Y
   <tr>
     <td>Subscriber</td>
     <td>/yolo_segment_result</td>
-    <td>qrb_ros_vision_msgs::msg::Detection2DArrayWithMask</td>
+    <td>qrb_ros_vision_msgs/msg/Detection2DArrayWithMask</td>
     <td>Post-processed segmentation result</td>
   </tr>
   <tr>
@@ -225,8 +225,8 @@ The architecture diagram above illustrates all functional blocks in a complete Y
   <tr>
     <td>Publisher</td>
     <td>/yolo_segment_overlay</td>
-    <td>qrb_ros_vision_msgs::msg::Detection2DArrayWithMask</td>
-    <td>Visualization image with segmentation mask.</td>
+    <td>sensor_msgs::msg::Image</td>
+    <td>Image with object info & segmentation mask.</td>
   </tr>
 </table>
 
@@ -250,14 +250,20 @@ The architecture diagram above illustrates all functional blocks in a complete Y
 ---
 
 ## ✨ Installation
-Add Qualcomm IOT PPA for Ubuntu:
+
+> [!IMPORTANT]
+> **PREREQUISITES**: The following steps need to be run on **Qualcomm Ubuntu** and **ROS Jazzy**.<br>
+> Reference [Install Ubuntu on Qualcomm IoT Platforms](https://ubuntu.com/download/qualcomm-iot) and [Install ROS Jazzy](https://docs.ros.org/en/jazzy/index.html) to setup environment. <br>
+> For Qualcomm Linux, please check out the [Qualcomm Intelligent Robotics Product SDK](https://docs.qualcomm.com/bundle/publicresource/topics/80-70018-265/introduction_1.html?vproduct=1601111740013072&version=1.4&facet=Qualcomm%20Intelligent%20Robotics%20Product%20(QIRP)%20SDK) documents.
+
+1. Add Qualcomm IOT PPA for Ubuntu:
 ```bash
 sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-ppa
 sudo add-apt-repository ppa:ubuntu-qcom-iot/qirp
 sudo apt update
 ```
 
-Install Debian packages:
+2. Install Debian packages:
 ```bash
 sudo apt install ros-jazzy-qrb-ros-yolo-process
 ```
@@ -270,7 +276,7 @@ sudo apt install ros-jazzy-qrb-ros-yolo-process
 > Need sign in to [QAIHUB](https://app.aihub.qualcomm.com/docs/hub/getting_started.html).
 
 ```bash
-## suggest to use python venv to avoid impacting to host environment
+## It is recommended to use python venv to avoid impacting the host environment
 mkdir venv_qaihub
 python -m venv venv_qaihub
 source venv_qaihub/bin/activate
@@ -278,7 +284,7 @@ source venv_qaihub/bin/activate
 ## install qai-hub related python packages
 pip install qai-hub
 
-## configure qai-hub tocken, replace xxx with your own token
+## configure qai-hub token, replace xxx with your own token got from qaihub page.
 qai-hub configure --api_token xxx
 
 pip install "qai-hub-models[yolov8_det]"
@@ -332,7 +338,7 @@ python -m qai_hub_models.models.yolov8_seg.export --target-runtime "<supported-r
 
 ### 2. Run YOLOv8 pipeline
 > This project only includes the ROS package related to post-processing in the YOLO pipeline.\
-> For a complete YOLO pipeline including image input, preprocessing and postprocessing, please refer to:
+> For a complete YOLO pipeline including image input, preprocessing and post-processing, please refer to:
 > * [sample_object_detection](https://github.com/qualcomm-qrb-ros/qrb_ros_samples/tree/main/ai_vision/sample_object_detection)
 > * [sample_object_segmentation](https://github.com/qualcomm-qrb-ros/qrb_ros_samples/tree/main/ai_vision/sample_object_segmentation)
 
@@ -362,7 +368,7 @@ colcon build --packages-up-to qrb_ros_yolo_process
 
 ## 🤝 Contributing
 
-We love community contributions! Get started by reading our [CONTRIBUTING.md](CONTRIBUTING.md).  
+We love community contributions! Get started by reading our [CONTRIBUTING.md](../../CONTRIBUTING.md).  
 Feel free to create an issue for bug reports, feature requests, or any discussion 💡.
 
 ## 📜 License

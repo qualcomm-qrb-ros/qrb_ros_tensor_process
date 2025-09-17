@@ -13,17 +13,17 @@
 
 ## 👋 Overview
 
-**QRB ROS CV TENSOR COMMON PROCESSOR** is a ROS2 package that provides general-purpose preprocessing ROS2 node to meet the needs of vision-based AI models. Its offers image resizing, normalization, data type conversion, and tensor layout transformation, allowing you to quickly prepare data for your AI inference pipeline.
+**QRB ROS CV TENSOR COMMON PROCESSOR** is a ROS2 package that provides general-purpose preprocessing ROS2 node to meet the needs of vision-based AI models. It offers image resizing, normalization, data type conversion, and tensor layout transformation, allowing you to quickly prepare data for your AI inference pipeline.
 
 <div align="left">
   <img src="./docs/assets/architecture.png" alt="architecture" width="600">
 </div>
 
-The architecture diagram above illustrates the functionality composition of this ROS2 node. It provides core feautures:
+The architecture diagram above illustrates the functionality composition of this ROS2 node. It provides core features:
 - resizing : resize input image to desired size
 - data type converting : convert pixel value(uint8) into float32/float64
-- normalizing : normalize pixel value from unit8 (0 ~ 255) to float32/float64 (0.0 ~ 1.0)
-- transpoing : transpose tensor shape, NHWC <==> NCWH
+- normalizing : normalize pixel value from uint8 (0 ~ 255) to float32/float64 (0.0 ~ 1.0)
+- transposing : transpose tensor shape, NHWC <==> NCWH
 
 ## 🔎 Table of Contents
 
@@ -111,6 +111,12 @@ The architecture diagram above illustrates the functionality composition of this
 ---
 
 ## ✨ Installation
+
+> [!IMPORTANT]
+> **PREREQUISITES**: The following steps need to be run on **Qualcomm Ubuntu** and **ROS Jazzy**.<br>
+> Reference [Install Ubuntu on Qualcomm IoT Platforms](https://ubuntu.com/download/qualcomm-iot) and [Install ROS Jazzy](https://docs.ros.org/en/jazzy/index.html) to setup environment. <br>
+> For Qualcomm Linux, please check out the [Qualcomm Intelligent Robotics Product SDK](https://docs.qualcomm.com/bundle/publicresource/topics/80-70018-265/introduction_1.html?vproduct=1601111740013072&version=1.4&facet=Qualcomm%20Intelligent%20Robotics%20Product%20(QIRP)%20SDK) documents.
+
 1. Add Qualcomm IOT PPA for Ubuntu:
 ```bash
 sudo add-apt-repository ppa:ubuntu-qcom-iot/qcom-ppa
@@ -126,7 +132,7 @@ sudo apt install ros-jazzy-qrb-ros-cv-tensor-common-process
 ## 🚀 Usage
 
 The following ROS launch file shows minimal launch file example to get started.
-> It doesn't perform any operations by itself. You still need to provide an image topic and add ROS nodes for tensor processing to build a complete and functional pipeline.
+> This minimal launch example alone does not perform any operation. You still need to provide an image topic and add ROS nodes for tensor processing to build a complete and functional pipeline.
 ```python
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -218,7 +224,7 @@ colcon build --packages-up-to qrb_ros_cv_tensor_common_process
 
 ## 🤝 Contributing
 
-We love community contributions! Get started by reading our [CONTRIBUTING.md](CONTRIBUTING.md).  
+We love community contributions! Get started by reading our [CONTRIBUTING.md](../../CONTRIBUTING.md).
 Feel free to create an issue for bug reports, feature requests, or any discussion 💡.
 
 ## 📜 License

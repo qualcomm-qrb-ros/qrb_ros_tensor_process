@@ -141,11 +141,17 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
     return;
   }
 
-  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[0].p_vec->data());
-  const float * const ptr_score = reinterpret_cast<float *>(tensors[1].p_vec->data());
-  const float * const ptr_mask = reinterpret_cast<float *>(tensors[2].p_vec->data());
-  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[3].p_vec->data());
-  const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[4].p_vec->data());
+  const int idx_boxes = get_tensor_idx(tensors, "boxes");
+  const int idx_scores = get_tensor_idx(tensors, "scores");
+  const int idx_masks = get_tensor_idx(tensors, "masks");
+  const int idx_class = get_tensor_idx(tensors, "class_idx");
+  const int idx_protos = get_tensor_idx(tensors, "protos");
+
+  const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[idx_boxes].p_vec->data());
+  const float * const ptr_score = reinterpret_cast<float *>(tensors[idx_scores].p_vec->data());
+  const float * const ptr_mask = reinterpret_cast<float *>(tensors[idx_masks].p_vec->data());
+  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[idx_class].p_vec->data());
+  const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[idx_protos].p_vec->data());
 
   // fixed value required by model
   const std::vector<int> input_shape = { 640, 640 };

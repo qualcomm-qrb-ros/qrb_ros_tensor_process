@@ -1,79 +1,61 @@
-# qrb_ros_yolo_processor
-qrb_ros_yolo_processor provides ros nodes to execute pre/post-process for Yolo model
+<div align="center">
+  <h1>QRB ROS Tensor Process</h1>
+  <p>ROS2 package for processing input and output of AI model.</p>
+  <a href="https://ubuntu.com/download/qualcomm-iot" target="_blank"><img src="https://img.shields.io/badge/Qualcomm%20Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Qualcomm Ubuntu"></a>
+  <a href="https://docs.ros.org/en/jazzy/" target="_blank"><img src="https://img.shields.io/badge/ROS%20Jazzy-1c428a?style=for-the-badge&logo=ros&logoColor=white" alt="Jazzy"></a>
+</div>
 
-## Overview
-qrb_ros_yolo_processor provides ros nodes to execute pre/post-process for Yolo model
+---
 
-## System Requirements
+## 👋 Overview
 
-- ROS 2 Humble and later
+**qrb_ros_tensor_process** is a ROS2 package for:
+- Transform the input data into the input tensor required by the AI model.
+- Handle the output tensor produced by the AI model.
 
-## Quickstart
+<div align="center">
+  <img src="./docs/assets/workflow.png" alt="workflow">
+</div>
 
-### Code Sync
+<br>
 
-Currently, we only support build with QCLINUX SDK.
+**qrb_ros_tensor_process** currently only provide foucs on image data processing, you can access more details in [cv_tensor_common_process](./cv_tensor_common_process).
 
-1. Setup QCLINUX SDK environments follow this document: [Set up the cross-compile environment](https://docs.qualcomm.com/bundle/publicresource/topics/80-65220-2/develop-your-first-application_6.html?product=1601111740013072&facet=Qualcomm%20Intelligent%20Robotics%20(QIRP)%20Product%20SDK&state=releasecandidate)
+---
 
-2. Create `ros_ws` directory in `<qirp_decompressed_workspace>/qirp-sdk/`
+## 🔎 Table of Contents
+  * [Supported Targets](#-supported-targets)
+  * [Contributing](#-contributing)
+  * [License](#-license)
 
-   ```bash
-   mkdir -p <qirp_decompressed_workspace>/qirp-sdk/ros_ws
-   ```
+---
 
-3. Clone this repository and dependencies under `<qirp_decompressed_workspace>/qirp-sdk/ros_ws`
+## 🎯 Supported Targets
 
-   ```bash
-   cd <qirp_decompressed_workspace>/qirp-sdk/ros_ws
+<table >
+  <tr>
+    <th>Development Hardware</th>
+    <th>Hardware Overview</th>
+  </tr>
+  <tr>
+    <td>Qualcomm Dragonwing™ RB3 Gen2</td>
+    <th><a href="https://www.qualcomm.com/developer/hardware/rb3-gen-2-development-kit"><img src="https://s7d1.scene7.com/is/image/dmqualcommprod/rb3-gen2-carousel?fmt=webp-alpha&qlt=85" width="180"/></a></th>
+  </tr>
+    <tr>
+    <td>Qualcomm Dragonwing™ IQ-9075 EVK</td>
+    <th><a href="https://www.qualcomm.com/products/internet-of-things/industrial-processors/iq9-series/iq-9075"><img src="https://s7d1.scene7.com/is/image/dmqualcommprod/dragonwing-IQ-9075-EVK?$QC_Responsive$&fmt=png-alpha" width="160"></a></th>
+  </tr>
+</table>
 
-   ## current repository
-   git clone https://github.qualcomm.com/QUIC-QRB-ROS/qrb_ros_yolo_processor.git
+---
 
-   ## dependencies
-   git clone https://github.com/quic-qrb-ros/qrb_ros_vision_msgs.git
-   ```
+## 🤝 Contributing
 
-### Build
+We love community contributions! Get started by reading our [CONTRIBUTING.md](CONTRIBUTING.md).
+Feel free to create an issue for bug report, feature requests or any discussion.
 
-   ```bash
-   export AMENT_PREFIX_PATH="${OECORE_TARGET_SYSROOT}/usr;${OECORE_NATIVE_SYSROOT}/usr"
-   export PYTHONPATH=${PYTHONPATH}:${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages
+---
 
-   colcon build --merge-install --cmake-args \
-      -DPython3_ROOT_DIR=${OECORE_TARGET_SYSROOT}/usr \
-      -DPython3_NumPy_INCLUDE_DIR=${OECORE_TARGET_SYSROOT}/usr/lib/python3.10/site-packages/numpy/core/include \
-      -DPYTHON_SOABI=cpython-310-aarch64-linux-gnu -DCMAKE_STAGING_PREFIX=$(pwd)/install \
-      -DCMAKE_PREFIX_PATH=$(pwd)/install/share \
-      -DBUILD_TESTING=OFF
-   ```
-### Run
+## 📜 License
 
-1. Set up the environment on your device:
-
-   ```bash
-   ssh root@[ip-addr]
-   (ssh) export HOME=/opt
-   (ssh) source /opt/qcom/qirp-sdk/qirp-setup.sh
-   (ssh) source /usr/bin/ros_setup.bash
-   ```
-
-2. use launch file to run your inference pipeline
-
-   ```bash
-   (ssh) ros2 launch ${package_name} ${launch-file}
-   ```
-
-## Resources
-
-
-## Contributions
-
-Thanks for your interest in contributing to qrb_ros_yolo_processor! Please read our [Contributions Page](CONTRIBUTING.md) for more information on contributing features or bug fixes. We look forward to your participation!
-
-## License
-
-qrb_ros_yolo_processor is licensed under the BSD 3-clause "New" or "Revised" License.
-
-Check out the [LICENSE](LICENSE) for more details.
-
+Project is licensed under the [BSD-3-Clause](https://spdx.org/licenses/BSD-3-Clause.html) License. See [LICENSE](./LICENSE) for the full license text.

@@ -9,17 +9,18 @@
 
 ## 👋 Overview
 
-**qrb_ros_tensor_process** is a ROS2 package for:
-- Transform the input data into the input tensor required by the AI model.
-- Handle the output tensor produced by the AI model.
+**qrb_ros_tensor_process** is a ROS2 package designed to bridge the gap between conventional data formats and AI model requirements:
+
+- **Input Processing**: Transforms conventional data (images, text, audio, etc.) into the specific tensor format required by AI models。
+- **Output Processing**: Handles the output tensors produced by AI models and converts them into usable results。
+
+For input processing, corrently this package focuses primarily on image data preprocessing capabilities, you can see [cv_tensor_common_process](./cv_tensor_process/cv_tensor_common_process).<br>
+
+For output processing, the package provides **model-specific** libraries to handle the unique requirements of different AI architectures and only YOLOv8 output tensor post-processing is supported now, you can get more details in [yolov8_process](./cv_tensor_process/yolo_v8_process).
 
 <div align="center">
   <img src="./docs/assets/workflow.png" alt="workflow">
 </div>
-
-<br>
-
-**qrb_ros_tensor_process** currently only provide foucs on image data processing, you can access more details in [cv_tensor_common_process](./cv_tensor_common_process).
 
 ---
 

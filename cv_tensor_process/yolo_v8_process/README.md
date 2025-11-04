@@ -319,7 +319,7 @@ Supported target runtimes for different devices in the current ROS package are a
   </tr>
   <tr>
     <td>IQ-9075 EVK</td>
-    <td>tflite / qnn</td>
+    <td>tflite / qnn_context_binary</td>
     <td>"QCS9075 (Proxy)"</td>
     <td>"qualcomm-qcs9075-proxy"</td>
   </tr>
@@ -329,7 +329,7 @@ Supported target runtimes for different devices in the current ROS package are a
 # Export YOLOv8 detection model
 ## Please replace params <supported-runtime> and <chipset> as per the table above.
 ## Example: 
-##   python -m qai_hub_models.models.yolov8_det.export --target-runtime "qnn" --chipset "qualcomm-qcs9075-proxy" --skip-profiling --skip-inferencing
+##   python -m qai_hub_models.models.yolov8_det.export --target-runtime "qnn_context_binary" --chipset "qualcomm-qcs9075-proxy" --skip-profiling --skip-inferencing
 python -m qai_hub_models.models.yolov8_det.export --target-runtime "<supported-runtime>" --chipset "<chipset>" --skip-profiling --skip-inferencing
 
 # Export YOLOv8 segmentation model

@@ -1,0 +1,13 @@
+ros-jazzy-qrb-ros-cv-tensor-common-process (1.0.0) noble; urgency=medium
+
+  * Update package dependency info.
+
+ -- Xiao Li <xiaolee@qti.qualcomm.com>>  Wed, 20 Aug 2025 13:10:39 +0800
+
+ros-jazzy-qrb-ros-cv-tensor-common-process (0.0.0) noble; urgency=high
+
+  * First release for Debian package.
+
+ -- Xiao Li <xiaolee@qti.qualcomm.com>  Tue, 24 Jun 2025 04:04:48 -0000
+
+

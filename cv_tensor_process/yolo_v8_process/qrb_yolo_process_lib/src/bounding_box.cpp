@@ -18,51 +18,43 @@ BoundingBox::BoundingBox(const BBoxCoords & bbox, BoxFmt fmt)
         << std::endl;
     throw std::invalid_argument(oss.str());
   }
+  BBoxCoords box = bbox;
+  for (int n = 0; n < box_size; ++n) {
+    if (box[n] < 0.0) {
+      box[n] = 0.0;
+    }
+  }
 
   float tl_x, tl_y, br_x, br_y;
   switch (fmt) {
     case BoxFmt::TLBR:
-      tl_x = bbox[0];
-      tl_y = bbox[1];
-      br_x = bbox[2];
-      br_y = bbox[3];
+      tl_x = box[0];
+      tl_y = box[1];
+      br_x = box[2];
+      br_y = box[3];
       break;
 
     case BoxFmt::TLWH:
-      tl_x = bbox[0];
-      tl_y = bbox[1];
-      br_x = bbox[0] + bbox[2];
-      br_y = bbox[1] + bbox[3];
+      tl_x = box[0];
+      tl_y = box[1];
+      br_x = box[0] + box[2];
+      br_y = box[1] + box[3];
       break;
 
     case BoxFmt::CXYWH:
-      tl_x = bbox[0] - bbox[2] / 2.0;
-      tl_y = bbox[1] - bbox[3] / 2.0;
-      br_x = bbox[0] + bbox[2] / 2.0;
-      br_y = bbox[1] + bbox[3] / 2.0;
+      tl_x = box[0] - box[2] / 2.0;
+      tl_y = box[1] - box[3] / 2.0;
+      br_x = box[0] + box[2] / 2.0;
+      br_y = box[1] + box[3] / 2.0;
       break;
 
     default:
       throw std::invalid_argument("Invalid bounding box format");
       break;
   }
-  // judge the validity
   box_arr_ = { tl_x, tl_y, br_x, br_y };
-  if (br_x < tl_x || br_y < tl_y) {
-    std::ostringstream oss;
-    oss << "Invalid bounding box(TLBR): (";
-    std::copy(box_arr_.begin(), box_arr_.end(), std::ostream_iterator<float>(oss, ","));
-    oss << ")" << std::endl;
-    throw std::invalid_argument(oss.str());
-  }
-  // clamp to zero if negative
-  for (int n = 0; n < box_size; n++) {
-    if (box_arr_[n] < 0.0f) {
-      box_arr_[n] = 0.0f;
-    }
-  }
-  // throw exception if the two coordinate points overlap
-  if (box_arr_[0] == box_arr_[2] && box_arr_[1] == box_arr_[3]) {
+
+  if (tl_x < 0.0f || tl_y < 0.0f || br_x < tl_x || br_y < tl_y) {
     std::ostringstream oss;
     oss << "Invalid bounding box(TLBR): (";
     std::copy(box_arr_.begin(), box_arr_.end(), std::ostream_iterator<float>(oss, ","));

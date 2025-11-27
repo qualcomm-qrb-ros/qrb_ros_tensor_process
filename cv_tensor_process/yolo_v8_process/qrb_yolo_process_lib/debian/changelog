@@ -1,3 +1,9 @@
+ros-jazzy-qrb-yolo-process (1.0.2) noble; urgency=medium
+
+  * Update source code to accommodate tensor changes in the AI model.
+
+ -- Xiao Li <xiaolee@qti.qualcomm.com>  Wed, 26 Nov 2025 17:44:55 +0800
+
 ros-jazzy-qrb-yolo-process (1.0.0) noble; urgency=medium
 
   * refine package dependency info

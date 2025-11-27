@@ -46,9 +46,9 @@ YoloSegPostProcessor::YoloSegPostProcessor(const std::string & label_file,
   tensor_specs_ = {
     { "boxes", TensorDataType::FLOAT32, { 1, 8400, 4 } },
     { "scores", TensorDataType::FLOAT32, { 1, 8400 } },
-    { "masks", TensorDataType::FLOAT32, { 1, 8400, 32 } },
-    { "class_idx", TensorDataType::UINT8, { 1, 8400 } },
-    { "protos", TensorDataType::FLOAT32, { 1, 32, 160, 160 } },
+    { "mask_coeffs", TensorDataType::FLOAT32, { 1, 8400, 32 } },
+    { "class_idx", TensorDataType::FLOAT32, { 1, 8400 } },
+    { "mask_protos", TensorDataType::FLOAT32, { 1, 160, 160, 32 } },
   };
 }
 
@@ -143,14 +143,14 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
 
   const int idx_boxes = get_tensor_idx(tensors, "boxes");
   const int idx_scores = get_tensor_idx(tensors, "scores");
-  const int idx_masks = get_tensor_idx(tensors, "masks");
+  const int idx_masks = get_tensor_idx(tensors, "mask_coeffs");
   const int idx_class = get_tensor_idx(tensors, "class_idx");
-  const int idx_protos = get_tensor_idx(tensors, "protos");
+  const int idx_protos = get_tensor_idx(tensors, "mask_protos");
 
   const float(*const ptr_bbox)[4] = reinterpret_cast<float(*)[4]>(tensors[idx_boxes].p_vec->data());
   const float * const ptr_score = reinterpret_cast<float *>(tensors[idx_scores].p_vec->data());
   const float * const ptr_mask = reinterpret_cast<float *>(tensors[idx_masks].p_vec->data());
-  const uint8_t * const ptr_label = reinterpret_cast<uint8_t *>(tensors[idx_class].p_vec->data());
+  const float * const ptr_label = reinterpret_cast<float *>(tensors[idx_class].p_vec->data());
   const float * const ptr_proto_mask = reinterpret_cast<float *>(tensors[idx_protos].p_vec->data());
 
   // fixed value required by model
@@ -159,15 +159,14 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
   int mask_size = mask_shape[0] * mask_shape[1];
   int mask_dims = 32;
 
-  // populate proto mask matrix, [1, mask_dims, 160, 160] -> [mask_dims, 160*160]
+  // populate proto mask matrix
+  // model outputs [1, 160, 160, mask_dims] (NHWC). Convert to [mask_dims, 160*160]
   std::vector<std::vector<float>> vec_proto_mask;
-  vec_proto_mask.reserve(mask_dims);
-  for (int i = 0; i < mask_dims; ++i) {
-    // Get the start and end pointers for the current dimension
-    const float * const p_head = ptr_proto_mask + i * mask_size;
-    const float * const p_tail = p_head + mask_size;
-
-    vec_proto_mask.emplace_back(p_head, p_tail);
+  vec_proto_mask.assign(mask_dims, std::vector<float>(mask_size));
+  for (int j = 0; j < mask_size; ++j) {
+    for (int k = 0; k < mask_dims; ++k) {
+      vec_proto_mask[k][j] = ptr_proto_mask[j * mask_dims + k];
+    }
   }
 
   // populate valid instance mask matrix, [1, num_preds, mask_dims] -> [n, mask_dims]
@@ -197,8 +196,9 @@ void YoloSegPostProcessor::process(const std::vector<Tensor> & tensors,
     float score = ptr_score[idx];
 
     std::string label;
+    int label_id = static_cast<int>(ptr_label[idx]);
     try {
-      label = label_map_.at(ptr_label[idx]);
+      label = label_map_.at(label_id);
     } catch (const std::out_of_range & e) {
       label = "unknown";
     }

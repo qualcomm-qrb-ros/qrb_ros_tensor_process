@@ -277,31 +277,23 @@ sudo apt install ros-jazzy-qrb-ros-yolo-process
 
 ```bash
 ## It is recommended to use python venv to avoid impacting the host environment
-mkdir venv_qaihub
-python -m venv venv_qaihub
+sudo apt install python3-venv
+python3 -m venv venv_qaihub
 source venv_qaihub/bin/activate
  
 ## install qai-hub related python packages
-pip install qai-hub==0.31.0
+pip3 install qai-hub
 
 ## configure qai-hub token, replace xxx with your own token got from qaihub page.
 qai-hub configure --api_token xxx
 
-pip install qai-hub-models[yolov8_det]==0.31.0
-pip install qai-hub-models[yolov8_seg]==0.31.0
+pip3 install "qai-hub-models[yolov8_det]"
+pip3 install "qai-hub-models[yolov8_seg]"
 ```
 
 
 
 ### 🔹Export model
-
-> For YOLOv8 segmentation model export, you may need to modify the tensor output shape as follows:
-```bash
-vim venv_qaihub/qaihub/lib/python3.12/site-packages/qai_hub_models/models/_shared/yolo/model.py
-
-## 1. Find "def get_channel_last_outputs()"
-## 2. Change "return ["protos"]" to "return [""]"
-```
 
 Supported target runtimes for different devices in the current ROS package are as follows.
 <table>

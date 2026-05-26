@@ -144,9 +144,11 @@ void CvTensorCommonProcessNode::process_core(
 
   } else if (msg->encoding == "rgb8" || msg->encoding == "bgr8") {
     RCLCPP_DEBUG_STREAM(this->get_logger(), "color space convert skipped");
+    int aligned_width = qrb_ros::transport::image_utils::align_width(msg->width);
     cv::Mat img_rgb_tmp(
-        msg->height, msg->width, CV_8UC3, reinterpret_cast<uchar *>(img_data.get()));
-    image = img_rgb_tmp;
+        msg->height, aligned_width, CV_8UC3, reinterpret_cast<uchar *>(img_data.get()));
+    // crop to actual width to remove stride padding
+    image = img_rgb_tmp(cv::Rect(0, 0, msg->width, msg->height)).clone();
   } else {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Unsupported input encoding: " << msg->encoding);
     throw std::invalid_argument("Unsupported input encoding: " + msg->encoding);

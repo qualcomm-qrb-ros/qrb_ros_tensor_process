@@ -237,10 +237,6 @@ The architecture diagram above illustrates all functional blocks in a complete Y
     <th>Development Hardware</th>
     <th>Hardware Overview</th>
   </tr>
-  <tr>
-    <td>Qualcomm Dragonwing™ RB3 Gen2</td>
-    <th><a href="https://www.qualcomm.com/developer/hardware/rb3-gen-2-development-kit"><img src="https://s7d1.scene7.com/is/image/dmqualcommprod/rb3-gen2-carousel?fmt=webp-alpha&qlt=85" width="180"/></a></th>
-  </tr>
     <tr>
     <td>Qualcomm Dragonwing™ IQ-9075 EVK</td>
     <th><a href="https://www.qualcomm.com/products/internet-of-things/industrial-processors/iq9-series/iq-9075"><img src="https://s7d1.scene7.com/is/image/dmqualcommprod/dragonwing-IQ-9075-EVK?$QC_Responsive$&fmt=png-alpha" width="160"></a></th>
@@ -302,12 +298,6 @@ Supported target runtimes for different devices in the current ROS package are a
     <th>Supported Runtime</th>
     <th>Device Name</th>
     <th>Chipset Name</th>
-  </tr>
-  <tr>
-    <td>RB3 Gen2</td>
-    <td>tflite</td>
-    <td>"RB3 Gen 2 (Proxy)"</td>
-    <td>"qualcomm-qcs6490-proxy"</td>
   </tr>
   <tr>
     <td>IQ-9075 EVK</td>
